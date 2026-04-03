@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 import swaggerUi from "swagger-ui-express";
 import { suggestSlots } from "./slotEngine.js";
 import { registerClassmateRoutes } from "./classmateApi.js";
-import { listAppointments, insertAppointment, getDbPath } from "./db.js";
+import { listAppointments, insertAppointment, listServices, insertService, getDbPath } from "./db.js";
 import { registerIntegrationRoutes } from "./integration.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -17,12 +17,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
-
-/** В памяти: демо-данные для GET (услуги и записи) */
-const services = [
-  { id: "svc-1", title: "Индивидуальное занятие", defaultDurationMin: 60, price: 1500 },
-  { id: "svc-2", title: "Консультация", defaultDurationMin: 30, price: 800 },
-];
 
 const getMiniCrmBaseUrl = () =>
   (process.env.PUBLIC_BASE_URL || process.env.MINICRM_BASE_URL || `http://127.0.0.1:${PORT}`).replace(
@@ -42,7 +36,34 @@ app.get("/api/health", (req, res) => {
 });
 
 app.get("/api/services", (req, res) => {
-  res.json({ data: services });
+  res.json({ data: listServices() });
+});
+
+app.post("/api/services", (req, res) => {
+  const { title, defaultDurationMin, price, id } = req.body || {};
+  if (!title || String(title).trim() === "") {
+    return res.status(400).json({ error: "Укажите title" });
+  }
+  const dur = Number(defaultDurationMin);
+  const pr = Number(price);
+  if (!Number.isFinite(dur) || dur <= 0 || dur > 24 * 60) {
+    return res.status(400).json({ error: "Укажите defaultDurationMin (1…1440)" });
+  }
+  if (!Number.isFinite(pr) || pr < 0) {
+    return res.status(400).json({ error: "Укажите price (число ≥ 0)" });
+  }
+  try {
+    const sid = insertService({ id, title, defaultDurationMin: dur, price: pr });
+    res.status(201).json({
+      data: { id: sid, title: String(title).trim(), defaultDurationMin: dur, price: pr },
+      message: "Услуга добавлена",
+    });
+  } catch (e) {
+    if (e && e.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
+      return res.status(409).json({ error: "Услуга с таким id уже есть" });
+    }
+    res.status(500).json({ error: String(e.message || e) });
+  }
 });
 
 app.get("/api/appointments", (req, res) => {
@@ -117,7 +138,7 @@ app.listen(PORT, () => {
   console.log(`MiniCRM Booking API: http://localhost:${PORT} (при запуске локально)`);
   console.log(`MiniCRM Booking API: https://cvb-crm.onrender.com`);
   console.log(`  GET  /api/health`);
-  console.log(`  GET  /api/services`);
+  console.log(`  GET/POST /api/services`);
   console.log(`  GET  /api/appointments`);
   console.log(`  POST /api/slots/suggest`);
   console.log(`  POST /api/appointments`);

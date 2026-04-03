@@ -25,6 +25,24 @@ db.exec(`
   );
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS services (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    default_duration_min INTEGER NOT NULL,
+    price REAL NOT NULL
+  );
+`);
+
+const seedServices = db.prepare(
+  `INSERT INTO services (id, title, default_duration_min, price) VALUES (?, ?, ?, ?)`
+);
+const serviceCount = db.prepare("SELECT COUNT(*) AS n FROM services").get();
+if (serviceCount.n === 0) {
+  seedServices.run("svc-1", "Индивидуальное занятие", 60, 1500);
+  seedServices.run("svc-2", "Консультация", 30, 800);
+}
+
 export function getDbPath() {
   return dbPath;
 }
@@ -38,6 +56,27 @@ export function listAppointments() {
        FROM appointments ORDER BY datetime(created_at) DESC`
     )
     .all();
+}
+
+export function listServices() {
+  return db
+    .prepare(
+      `SELECT id, title, default_duration_min AS defaultDurationMin, price FROM services ORDER BY title`
+    )
+    .all();
+}
+
+export function insertService({ id, title, defaultDurationMin, price }) {
+  const sid = id && String(id).trim() ? String(id).trim() : `svc-${Date.now()}`;
+  db.prepare(
+    `INSERT INTO services (id, title, default_duration_min, price) VALUES (@id, @title, @defaultDurationMin, @price)`
+  ).run({
+    id: sid,
+    title: String(title).trim(),
+    defaultDurationMin: Number(defaultDurationMin),
+    price: Number(price),
+  });
+  return sid;
 }
 
 export function insertAppointment(row) {

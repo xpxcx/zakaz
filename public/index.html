@@ -161,13 +161,94 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+    .slot-cal-wrap { margin: 1rem 0; }
+    .slot-cal-nav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .slot-cal-nav button.icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font: inherit;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .slot-cal-nav button.icon:hover { background: #f1f5f9; }
+    .slot-cal-title { font-weight: 600; min-width: 10rem; text-transform: capitalize; }
+    .slot-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      max-width: 520px;
+    }
+    .slot-cal-head {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-align: center;
+      padding: 0.25rem 0;
+    }
+    .slot-cal-cell {
+      aspect-ratio: 1;
+      min-height: 2.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      padding: 2px;
+      transition: box-shadow 0.15s;
+    }
+    .slot-cal-cell:hover:not(.slot-cal-pad):not(:disabled) { box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35); }
+    .slot-cal-cell.slot-cal-pad { visibility: hidden; pointer-events: none; border: none; background: transparent; }
+    .slot-cal-cell.slot-cal-past { opacity: 0.45; cursor: default; background: #f1f5f9; }
+    .slot-cal-cell.slot-cal-loading { cursor: wait; }
+    .slot-cal-cell.slot-cal-free { background: #ecfdf5; border-color: #6ee7b7; }
+    .slot-cal-cell.slot-cal-busy { background: #fef2f2; border-color: #fecaca; }
+    .slot-cal-cell.slot-cal-today { font-weight: 700; box-shadow: inset 0 0 0 2px var(--accent); }
+    .slot-cal-cell.slot-cal-selected { box-shadow: 0 0 0 2px #15803d; }
+    .slot-cal-cell .slot-cal-num { font-weight: 600; line-height: 1.1; }
+    .slot-cal-cell .slot-cal-hint { font-size: 0.62rem; color: var(--muted); line-height: 1; margin-top: 2px; }
+    .slot-day-free { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .slot-day-free h4 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .slot-time-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+    .slot-time-chips li { padding: 0; }
+    .slot-time-chips .slot-chip-btn {
+      display: inline-block;
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      font-size: 0.82rem;
+      font-family: ui-monospace, monospace;
+      cursor: pointer;
+      color: inherit;
+    }
+    .slot-time-chips .slot-chip-btn:hover { background: #dbeafe; border-color: #60a5fa; }
+    .slot-time-chips .slot-chip-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .slot-day-free .muted { margin-top: 0.35rem; }
+    .book-section-title { margin: 1.25rem 0 0.5rem; font-size: 1rem; font-weight: 600; }
+    .slot-details { margin: 1rem 0; border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 1rem; background: #fafbfc; }
+    .slot-details summary { cursor: pointer; font-weight: 600; }
+    .slot-details-body { margin-top: 0.75rem; }
   </style>
 </head>
 <body>
   <header class="top">
     <div>
       <h1>MiniCRM</h1>
-      <p>Запись, список записей, API одногруппника.</p>
+      <p>Справочник услуг, запись с календарём слотов, просмотр записей, товары одногруппника.</p>
     </div>
     <div class="top-links">
       <a href="/api-docs" target="_blank" rel="noopener">Swagger</a>
@@ -177,23 +258,87 @@
   <div class="layout">
     <aside class="sidebar">
       <button type="button" class="nav-btn active" data-panel="p-book">Запись</button>
+      <button type="button" class="nav-btn" data-panel="p-services">Справочник услуг</button>
       <button type="button" class="nav-btn" data-panel="p-list">Просмотр записей</button>
       <button type="button" class="nav-btn" data-panel="p-products">Просмотр товаров</button>
     </aside>
 
     <div class="main">
       <div class="panel active" id="p-book">
-        <div class="card">
+        <div class="card wide">
           <h3>Новая запись</h3>
+          <p class="lead">Выберите услугу, затем день в календаре и свободный интервал — поля «Начало» и «Конец» подставятся автоматически. При необходимости время можно изменить вручную.</p>
           <label for="cName">Имя клиента</label>
           <input id="cName" value="Иван Тестов" autocomplete="name" />
           <label for="cPhone">Телефон</label>
           <input id="cPhone" value="+79001234567" type="tel" />
           <label for="svcId2">Услуга</label>
-          <select id="svcId2">
-            <option value="svc-1">Индивидуальное занятие</option>
-            <option value="svc-2">Консультация</option>
-          </select>
+          <select id="svcId2"></select>
+          <h4 class="book-section-title">Календарь и свободные слоты</h4>
+          <div class="slot-cal-wrap">
+            <div class="slot-cal-nav">
+              <button type="button" class="icon" id="slotCalPrev" aria-label="Предыдущий месяц">‹</button>
+              <span class="slot-cal-title" id="slotCalTitle"></span>
+              <button type="button" class="icon" id="slotCalNext" aria-label="Следующий месяц">›</button>
+              <button type="button" class="action secondary" id="btnRefreshSlotCal">Обновить календарь</button>
+            </div>
+            <div class="slot-cal-grid" id="slotCalHead"></div>
+            <div class="slot-cal-grid" id="slotCalGrid"></div>
+            <p class="muted" id="slotCalLegend" style="margin-top:0.75rem;font-size:0.82rem">
+              Зелёный — есть свободные слоты в заданном окне; красный — нет. Прошедшие дни не кликабельны.
+            </p>
+          </div>
+          <div class="slot-day-free" id="slotDayFreeBlock">
+            <h4 id="slotDayFreeTitle">Свободное время</h4>
+            <ul class="slot-time-chips" id="slotDayTimes"></ul>
+            <p class="muted" id="slotDayFreeEmpty" style="display:none">Нет свободных интервалов в этом окне.</p>
+          </div>
+          <details class="slot-details">
+            <summary>Параметры подбора и отладка API</summary>
+            <div class="slot-details-body">
+              <div class="row2">
+                <div>
+                  <label for="slotDay">День (для запроса)</label>
+                  <input type="date" id="slotDay" />
+                </div>
+                <div>
+                  <label for="slotDur">Длительность слота (мин)</label>
+                  <input type="number" id="slotDur" value="60" min="1" max="1440" step="1" />
+                </div>
+              </div>
+              <div class="row2">
+                <div>
+                  <label for="slotTStart">Окно: с</label>
+                  <input type="time" id="slotTStart" value="08:00" />
+                </div>
+                <div>
+                  <label for="slotTEnd">Окно: до</label>
+                  <input type="time" id="slotTEnd" value="20:00" />
+                </div>
+              </div>
+              <div class="row2">
+                <div>
+                  <label for="slotBuffer">Буфер между записями (мин)</label>
+                  <input type="number" id="slotBuffer" value="10" min="0" step="5" />
+                </div>
+                <div>
+                  <label for="slotMax">Макс. слотов в ответе</label>
+                  <input type="number" id="slotMax" value="10" min="1" max="50" />
+                </div>
+              </div>
+              <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;margin-bottom:0.75rem">
+                <input type="checkbox" id="slotMergeAppts" checked style="width:auto;margin:0" />
+                Учитывать записи из MiniCRM (<code>GET /api/appointments</code>) как занятость
+              </label>
+              <label for="slotBusy"><code>busyIntervals</code> (JSON: массив <code>{"start","end"}</code> в ISO)</label>
+              <textarea id="slotBusy">[]</textarea>
+              <div class="btn-row">
+                <button type="button" class="action" id="btnSuggestSlots">Подобрать слоты (JSON)</button>
+              </div>
+              <pre class="out" id="slotsOut" style="display:none;max-height:360px"></pre>
+            </div>
+          </details>
+          <h4 class="book-section-title">Время записи</h4>
           <div class="row2">
             <div>
               <label for="start">Начало</label>
@@ -207,6 +352,50 @@
           <button type="button" class="action" id="btnBooking">Создать запись</button>
           <div class="booking-msg" id="bookingMsg"></div>
           <pre class="out" id="bookingOut" style="display:none"></pre>
+        </div>
+      </div>
+
+      <div class="panel" id="p-services">
+        <div class="card wide">
+          <h3>Справочник услуг</h3>
+          <p class="lead">Список из SQLite: <code>GET /api/services</code>. Новая услуга: <code>POST /api/services</code> (поля <code>title</code>, <code>defaultDurationMin</code>, <code>price</code>; <code>id</code> — необязательно).</p>
+          <h4 style="margin:0 0 0.75rem;font-size:1rem">Добавить услугу</h4>
+          <label for="newSvcTitle">Название</label>
+          <input id="newSvcTitle" type="text" placeholder="Например, Групповое занятие" />
+          <div class="row2">
+            <div>
+              <label for="newSvcDuration">Длительность по умолчанию (мин)</label>
+              <input id="newSvcDuration" type="number" min="1" max="1440" step="1" value="45" />
+            </div>
+            <div>
+              <label for="newSvcPrice">Цена, ₽</label>
+              <input id="newSvcPrice" type="number" min="0" step="1" placeholder="0" />
+            </div>
+          </div>
+          <label for="newSvcId">ID (необязательно, иначе будет <code>svc-…</code>)</label>
+          <input id="newSvcId" type="text" placeholder="svc-massage" />
+          <div class="btn-row">
+            <button type="button" class="action" id="btnAddService">Добавить</button>
+          </div>
+          <p class="muted" id="svcAddMsg" style="display:none"></p>
+          <h4 style="margin:1.25rem 0 0.75rem;font-size:1rem">Список</h4>
+          <div class="btn-row">
+            <button type="button" class="action secondary" id="btnRefreshServices">Обновить</button>
+          </div>
+          <p class="muted" id="svcEmpty">Загрузка…</p>
+          <div class="table-wrap" id="svcWrap" style="display:none">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Название</th>
+                  <th>Длительность, мин</th>
+                  <th>Цена, ₽</th>
+                </tr>
+              </thead>
+              <tbody id="svcBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -296,6 +485,368 @@
       const d = document.createElement("div");
       d.textContent = s == null ? "" : String(s);
       return d.innerHTML;
+    }
+
+    function fillBookingServiceSelect(rows) {
+      const sel = document.getElementById("svcId2");
+      const prev = sel.value;
+      sel.innerHTML = "";
+      (rows || []).forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.dataset.duration = String(s.defaultDurationMin);
+        opt.textContent = s.title + " — " + s.price + " ₽ (" + s.defaultDurationMin + " мин)";
+        sel.appendChild(opt);
+      });
+      if (sel.options.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Нет услуг — добавьте в справочнике";
+        sel.appendChild(opt);
+      }
+      if (prev && [...sel.options].some((o) => o.value === prev)) sel.value = prev;
+      syncSlotDurationFromService();
+    }
+
+    function syncSlotDurationFromService() {
+      const sel = document.getElementById("svcId2");
+      const dur = document.getElementById("slotDur");
+      if (!sel || !dur || !sel.selectedOptions[0]) return;
+      const d = sel.selectedOptions[0].dataset.duration;
+      if (d != null && d !== "") dur.value = d;
+    }
+
+    function renderServicesTable(rows) {
+      const tbody = document.getElementById("svcBody");
+      const wrap = document.getElementById("svcWrap");
+      const empty = document.getElementById("svcEmpty");
+      tbody.innerHTML = "";
+      if (!rows || !rows.length) {
+        wrap.style.display = "none";
+        empty.textContent = "Нет данных.";
+        return;
+      }
+      empty.textContent = "";
+      wrap.style.display = "block";
+      rows.forEach((s) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(s.id) +
+          "</td><td>" +
+          escapeHtml(s.title) +
+          "</td><td>" +
+          escapeHtml(s.defaultDurationMin) +
+          "</td><td>" +
+          escapeHtml(s.price) +
+          "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadServicesPanel() {
+      const empty = document.getElementById("svcEmpty");
+      empty.textContent = "Загрузка…";
+      document.getElementById("svcWrap").style.display = "none";
+      try {
+        const r = await fetch(api("/api/services"));
+        const j = await r.json();
+        if (!r.ok) {
+          empty.textContent = j.error || "Ошибка";
+          return;
+        }
+        const rows = j.data || [];
+        renderServicesTable(rows);
+        fillBookingServiceSelect(rows);
+        if (document.getElementById("p-book").classList.contains("active")) refreshSlotCalendarMonth();
+      } catch (e) {
+        empty.textContent = String(e.message || e);
+      }
+    }
+
+    let cachedAppointments = null;
+    let slotCalViewYear = null;
+    let slotCalViewMonth = null;
+    let slotCalendarCache = {};
+    let slotSelectedYmd = null;
+
+    async function refreshAppointmentsCache() {
+      const r = await fetch(api("/api/appointments"));
+      const j = await r.json();
+      cachedAppointments = r.ok ? j.data || [] : [];
+      return cachedAppointments;
+    }
+
+    async function ensureAppointmentsCache() {
+      if (cachedAppointments != null) return cachedAppointments;
+      return refreshAppointmentsCache();
+    }
+
+    async function getMergedBusyIntervals() {
+      const busyRaw = document.getElementById("slotBusy").value.trim();
+      let manual = [];
+      if (busyRaw) {
+        manual = JSON.parse(busyRaw);
+        if (!Array.isArray(manual)) throw new Error("busyIntervals должен быть JSON-массивом");
+      }
+      if (!document.getElementById("slotMergeAppts").checked) return manual;
+      await ensureAppointmentsCache();
+      const fromDb = (cachedAppointments || []).map((a) => ({ start: a.start, end: a.end }));
+      return fromDb.concat(manual);
+    }
+
+    function padTime(s) {
+      return s.length === 5 ? s + ":00" : s;
+    }
+
+    async function buildSuggestBody() {
+      const day = document.getElementById("slotDay").value;
+      const tStart = document.getElementById("slotTStart").value;
+      const tEnd = document.getElementById("slotTEnd").value;
+      const busyIntervals = await getMergedBusyIntervals();
+      return {
+        durationMinutes: Number(document.getElementById("slotDur").value) || 60,
+        windowStart: new Date(day + "T" + padTime(tStart)).toISOString(),
+        windowEnd: new Date(day + "T" + padTime(tEnd)).toISOString(),
+        bufferMinutes: Number(document.getElementById("slotBuffer").value) || 10,
+        maxResults: Number(document.getElementById("slotMax").value) || 10,
+        busyIntervals
+      };
+    }
+
+    function formatYmd(d) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    }
+
+    function startOfToday() {
+      const t = new Date();
+      t.setHours(0, 0, 0, 0);
+      return t;
+    }
+
+    async function fetchSlotsForYmd(ymd, maxResults) {
+      const tStart = document.getElementById("slotTStart").value;
+      const tEnd = document.getElementById("slotTEnd").value;
+      const busyIntervals = await getMergedBusyIntervals();
+      const body = {
+        durationMinutes: Number(document.getElementById("slotDur").value) || 60,
+        windowStart: new Date(ymd + "T" + padTime(tStart)).toISOString(),
+        windowEnd: new Date(ymd + "T" + padTime(tEnd)).toISOString(),
+        bufferMinutes: Number(document.getElementById("slotBuffer").value) || 10,
+        maxResults: Math.min(Number(maxResults) || 50, 50),
+        busyIntervals
+      };
+      const r = await fetch(api("/api/slots/suggest"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || "Ошибка подбора");
+      return { body, data };
+    }
+
+    function renderSlotCalHeaders() {
+      const head = document.getElementById("slotCalHead");
+      const names = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+      head.innerHTML = "";
+      names.forEach((n) => {
+        const el = document.createElement("div");
+        el.className = "slot-cal-head";
+        el.textContent = n;
+        head.appendChild(el);
+      });
+    }
+
+    function applySlotToBooking(startIso, endIso) {
+      const pad = (n) => String(n).padStart(2, "0");
+      const toLocalVal = (dt) =>
+        dt.getFullYear() +
+        "-" +
+        pad(dt.getMonth() + 1) +
+        "-" +
+        pad(dt.getDate()) +
+        "T" +
+        pad(dt.getHours()) +
+        ":" +
+        pad(dt.getMinutes());
+      document.getElementById("start").value = toLocalVal(new Date(startIso));
+      document.getElementById("end").value = toLocalVal(new Date(endIso));
+      document.getElementById("start").focus();
+    }
+
+    function renderSlotDayDetail(ymd) {
+      const ul = document.getElementById("slotDayTimes");
+      const emptyEl = document.getElementById("slotDayFreeEmpty");
+      const title = document.getElementById("slotDayFreeTitle");
+      ul.innerHTML = "";
+      const entry = ymd ? slotCalendarCache[ymd] : null;
+      if (!ymd) {
+        title.textContent = "Свободное время";
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Выберите день в календаре.";
+        return;
+      }
+      title.textContent = "Свободное время — " + ymd;
+      if (!entry || entry.error) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = (entry && entry.error) || "Нет данных.";
+        return;
+      }
+      const slots = (entry.data && entry.data.slots) || [];
+      if (!slots.length) {
+        emptyEl.style.display = "block";
+        emptyEl.textContent = "Нет свободных интервалов в этом окне.";
+        return;
+      }
+      emptyEl.style.display = "none";
+      slots.forEach((s) => {
+        const li = document.createElement("li");
+        const a = new Date(s.start);
+        const b = new Date(s.end);
+        const tf = (d) =>
+          String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "slot-chip-btn";
+        btn.textContent = tf(a) + " — " + tf(b);
+        btn.addEventListener("click", () => applySlotToBooking(s.start, s.end));
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+    }
+
+    async function refreshSlotCalendarMonth() {
+      if (slotCalViewYear == null) {
+        const n = new Date();
+        slotCalViewYear = n.getFullYear();
+        slotCalViewMonth = n.getMonth();
+      }
+      const y = slotCalViewYear;
+      const m = slotCalViewMonth;
+      document.getElementById("slotCalTitle").textContent = new Date(y, m, 1).toLocaleString("ru-RU", {
+        month: "long",
+        year: "numeric"
+      });
+      renderSlotCalHeaders();
+      const grid = document.getElementById("slotCalGrid");
+      grid.innerHTML = "";
+      const first = new Date(y, m, 1);
+      const last = new Date(y, m + 1, 0);
+      const lead = (first.getDay() + 6) % 7;
+      const today = startOfToday();
+      for (let i = 0; i < lead; i++) {
+        const pad = document.createElement("div");
+        pad.className = "slot-cal-cell slot-cal-pad";
+        grid.appendChild(pad);
+      }
+      await refreshAppointmentsCache();
+      slotCalendarCache = {};
+      const dayTasks = [];
+      for (let d = 1; d <= last.getDate(); d++) {
+        const dt = new Date(y, m, d);
+        const ymd = formatYmd(dt);
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "slot-cal-cell slot-cal-loading";
+        const num = document.createElement("span");
+        num.className = "slot-cal-num";
+        num.textContent = String(d);
+        cell.appendChild(num);
+        const hint = document.createElement("span");
+        hint.className = "slot-cal-hint";
+        hint.textContent = "…";
+        cell.appendChild(hint);
+        const dayStart = new Date(y, m, d);
+        const isPast = dayStart < today;
+        if (formatYmd(today) === ymd) cell.classList.add("slot-cal-today");
+        if (isPast) {
+          cell.classList.remove("slot-cal-loading");
+          cell.classList.add("slot-cal-past");
+          hint.textContent = "";
+          cell.disabled = true;
+          grid.appendChild(cell);
+          continue;
+        }
+        cell.dataset.ymd = ymd;
+        dayTasks.push(
+          fetchSlotsForYmd(ymd, 50)
+            .then(({ data }) => {
+              slotCalendarCache[ymd] = { data };
+              const n = (data.slots && data.slots.length) || 0;
+              cell.classList.remove("slot-cal-loading");
+              if (n > 0) {
+                cell.classList.add("slot-cal-free");
+                hint.textContent = n >= 50 ? "50+" : String(n);
+              } else {
+                cell.classList.add("slot-cal-busy");
+                hint.textContent = "0";
+              }
+            })
+            .catch((e) => {
+              slotCalendarCache[ymd] = { error: String(e.message || e) };
+              cell.classList.remove("slot-cal-loading");
+              cell.classList.add("slot-cal-busy");
+              hint.textContent = "!";
+            })
+        );
+        cell.onclick = () => {
+          document.querySelectorAll("#slotCalGrid .slot-cal-selected").forEach((x) =>
+            x.classList.remove("slot-cal-selected")
+          );
+          cell.classList.add("slot-cal-selected");
+          slotSelectedYmd = ymd;
+          document.getElementById("slotDay").value = ymd;
+          renderSlotDayDetail(ymd);
+        };
+        grid.appendChild(cell);
+      }
+      await Promise.all(dayTasks);
+      if (slotSelectedYmd) {
+        const sel = grid.querySelector('[data-ymd="' + slotSelectedYmd + '"]');
+        if (sel && !sel.disabled) {
+          sel.classList.add("slot-cal-selected");
+          renderSlotDayDetail(slotSelectedYmd);
+        } else {
+          slotSelectedYmd = null;
+          renderSlotDayDetail(null);
+        }
+      }
+    }
+
+    function initSlotCalendarNav() {
+      renderSlotCalHeaders();
+      document.getElementById("slotCalPrev").onclick = () => {
+        if (slotCalViewYear == null) {
+          const n = new Date();
+          slotCalViewYear = n.getFullYear();
+          slotCalViewMonth = n.getMonth();
+        }
+        slotCalViewMonth -= 1;
+        if (slotCalViewMonth < 0) {
+          slotCalViewMonth = 11;
+          slotCalViewYear -= 1;
+        }
+        refreshSlotCalendarMonth();
+      };
+      document.getElementById("slotCalNext").onclick = () => {
+        if (slotCalViewYear == null) {
+          const n = new Date();
+          slotCalViewYear = n.getFullYear();
+          slotCalViewMonth = n.getMonth();
+        }
+        slotCalViewMonth += 1;
+        if (slotCalViewMonth > 11) {
+          slotCalViewMonth = 0;
+          slotCalViewYear += 1;
+        }
+        refreshSlotCalendarMonth();
+      };
+      document.getElementById("btnRefreshSlotCal").onclick = () => {
+        cachedAppointments = null;
+        refreshSlotCalendarMonth();
+      };
     }
 
     function renderProductsTable(list) {
@@ -416,7 +967,17 @@
         const id = btn.dataset.panel;
         document.getElementById(id).classList.add("active");
         if (id === "p-list") loadAppointments();
+        if (id === "p-services") loadServicesPanel();
         if (id === "p-products") loadProductsPanel();
+        if (id === "p-book") {
+          if (slotCalViewYear == null) {
+            const n = new Date();
+            slotCalViewYear = n.getFullYear();
+            slotCalViewMonth = n.getMonth();
+          }
+          refreshSlotCalendarMonth();
+          renderSlotDayDetail(slotSelectedYmd);
+        }
       });
     });
 
@@ -441,6 +1002,92 @@
     }
     document.getElementById("start").value = toLocal(d0);
     document.getElementById("end").value = toLocal(d1);
+
+    (function initSlotDay() {
+      const d = new Date(Date.now() + 86400000);
+      document.getElementById("slotDay").value = d.toISOString().slice(0, 10);
+    })();
+    initSlotCalendarNav();
+
+    document.getElementById("btnRefreshServices").onclick = () => loadServicesPanel();
+
+    document.getElementById("btnAddService").onclick = async () => {
+      const title = document.getElementById("newSvcTitle").value.trim();
+      const defaultDurationMin = Number(document.getElementById("newSvcDuration").value);
+      const price = Number(document.getElementById("newSvcPrice").value);
+      const idRaw = document.getElementById("newSvcId").value.trim();
+      const msg = document.getElementById("svcAddMsg");
+      msg.style.display = "block";
+      if (!title) {
+        msg.style.color = "#b91c1c";
+        msg.textContent = "Укажите название.";
+        return;
+      }
+      if (!Number.isFinite(defaultDurationMin) || defaultDurationMin <= 0) {
+        msg.style.color = "#b91c1c";
+        msg.textContent = "Укажите длительность (мин).";
+        return;
+      }
+      if (!Number.isFinite(price) || price < 0) {
+        msg.style.color = "#b91c1c";
+        msg.textContent = "Укажите цену.";
+        return;
+      }
+      const payload = { title, defaultDurationMin, price };
+      if (idRaw) payload.id = idRaw;
+      try {
+        const r = await fetch(api("/api/services"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          msg.style.color = "#b91c1c";
+          msg.textContent = j.error || "Ошибка";
+          return;
+        }
+        msg.style.color = "#15803d";
+        msg.textContent = (j.message || "Добавлено") + (j.data && j.data.id ? " id=" + j.data.id : "");
+        document.getElementById("newSvcTitle").value = "";
+        document.getElementById("newSvcId").value = "";
+        await loadServicesPanel();
+      } catch (e) {
+        msg.style.color = "#b91c1c";
+        msg.textContent = String(e.message || e);
+      }
+    };
+
+    document.getElementById("btnSuggestSlots").onclick = async () => {
+      const pre = document.getElementById("slotsOut");
+      let body;
+      try {
+        body = await buildSuggestBody();
+      } catch (e) {
+        pre.style.display = "block";
+        pre.textContent = String(e.message || e);
+        return;
+      }
+      try {
+        const r = await fetch(api("/api/slots/suggest"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body)
+        });
+        const text = await r.text();
+        let data;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = { raw: text };
+        }
+        pre.style.display = "block";
+        pre.textContent = JSON.stringify({ http: r.status, request: body, data }, null, 2);
+      } catch (e) {
+        pre.style.display = "block";
+        pre.textContent = String(e.message || e);
+      }
+    };
 
     document.getElementById("btnRefreshAppts").onclick = () => loadAppointments();
     document.getElementById("btnRefreshProducts").onclick = () => loadProductsPanel();
@@ -535,12 +1182,21 @@
         msg.className = "booking-msg";
         msg.textContent = (data && data.message) || "Запись создана.";
         msg.style.display = "block";
+        cachedAppointments = null;
+        refreshSlotCalendarMonth();
       } catch (e) {
         msg.className = "booking-msg err";
         msg.textContent = String(e.message || e);
         msg.style.display = "block";
       }
     };
+
+    document.getElementById("svcId2").addEventListener("change", () => {
+      syncSlotDurationFromService();
+      if (document.getElementById("p-book").classList.contains("active")) refreshSlotCalendarMonth();
+    });
+
+    loadServicesPanel();
   </script>
 </body>
 </html>
