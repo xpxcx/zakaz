@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MiniCRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #eef1f6;
+      --card: #fff;
+      --text: #1a2332;
+      --muted: #5c6b82;
+      --border: #d8e0ed;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --sidebar: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      font-size: 15px;
+    }
+    .top {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .top h1 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+    .top p { margin: 0.2rem 0 0; font-size: 0.88rem; color: var(--muted); max-width: 40rem; }
+    .top-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .top-links a {
+      font-size: 0.85rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .top-links a:hover { text-decoration: underline; }
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      max-width: 1100px;
+      margin: 0 auto;
+      min-height: calc(100vh - 88px);
+    }
+    @media (max-width: 720px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .sidebar {
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    @media (max-width: 720px) {
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding: 0.75rem;
+      }
+    }
+    .nav-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 0.65rem 1rem;
+      border: none;
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
+      color: var(--text);
+      border-left: 3px solid transparent;
+    }
+    .nav-btn:hover { background: rgba(37, 99, 235, 0.06); }
+    .nav-btn.active {
+      background: #fff;
+      border-left-color: var(--accent);
+      font-weight: 600;
+    }
+    @media (max-width: 720px) {
+      .nav-btn {
+        width: auto;
+        border-radius: 8px;
+        border-left: none;
+        padding: 0.45rem 0.75rem;
+        border: 1px solid var(--border);
+      }
+      .nav-btn.active { border-color: var(--accent); background: #fff; }
+    }
+    .main { padding: 1.25rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      max-width: 640px;
+    }
+    .card.wide { max-width: 920px; }
+    .card h3 { margin: 0 0 0.5rem; font-size: 1.05rem; }
+    .card .lead { margin: 0 0 1rem; color: var(--muted); font-size: 0.9rem; }
+    label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 0.25rem; }
+    input, select, textarea {
+      width: 100%;
+      max-width: 100%;
+      padding: 0.5rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font: inherit;
+      margin-bottom: 0.75rem;
+    }
+    textarea { min-height: 72px; resize: vertical; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    @media (max-width: 500px) { .row2 { grid-template-columns: 1fr; } }
+    button.action {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.1rem;
+      font: inherit;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+    }
+    button.action:hover { background: var(--accent-hover); }
+    button.action.secondary { background: #64748b; }
+    button.action.secondary:hover { background: #475569; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th, .data-table td { border: 1px solid var(--border); padding: 0.45rem 0.55rem; text-align: left; }
+    .data-table th { background: #f8fafc; font-weight: 600; }
+    .table-wrap { overflow-x: auto; margin-top: 0.5rem; }
+    .muted { font-size: 0.85rem; color: var(--muted); }
+    .booking-msg { margin-top: 0.75rem; padding: 0.75rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 0.9rem; display: none; }
+    .booking-msg.err { background: #fef2f2; border-color: #fecaca; }
+    pre.out {
+      margin: 0.75rem 0 0;
+      padding: 0.75rem;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.75rem;
+      overflow: auto;
+      max-height: 220px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>MiniCRM</h1>
+      <p>Запись, список записей, API одногруппника.</p>
+    </div>
+    <div class="top-links">
+      <a href="/api-docs" target="_blank" rel="noopener">Swagger</a>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button type="button" class="nav-btn active" data-panel="p-book">Запись</button>
+      <button type="button" class="nav-btn" data-panel="p-list">Просмотр записей</button>
+      <button type="button" class="nav-btn" data-panel="p-products">Просмотр товаров</button>
+    </aside>
+
+    <div class="main">
+      <div class="panel active" id="p-book">
+        <div class="card">
+          <h3>Новая запись</h3>
+          <label for="cName">Имя клиента</label>
+          <input id="cName" value="Иван Тестов" autocomplete="name" />
+          <label for="cPhone">Телефон</label>
+          <input id="cPhone" value="+79001234567" type="tel" />
+          <label for="svcId2">Услуга</label>
+          <select id="svcId2">
+            <option value="svc-1">Индивидуальное занятие</option>
+            <option value="svc-2">Консультация</option>
+          </select>
+          <div class="row2">
+            <div>
+              <label for="start">Начало</label>
+              <input id="start" type="datetime-local" />
+            </div>
+            <div>
+              <label for="end">Конец</label>
+              <input id="end" type="datetime-local" />
+            </div>
+          </div>
+          <button type="button" class="action" id="btnBooking">Создать запись</button>
+          <div class="booking-msg" id="bookingMsg"></div>
+          <pre class="out" id="bookingOut" style="display:none"></pre>
+        </div>
+      </div>
+
+      <div class="panel" id="p-list">
+        <div class="card wide">
+          <h3>Просмотр записей</h3>
+          <div class="btn-row">
+            <button type="button" class="action" id="btnRefreshAppts">Обновить</button>
+          </div>
+          <p class="muted" id="apptsEmpty">Загрузка…</p>
+          <div class="table-wrap" id="apptsWrap" style="display:none">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Клиент</th>
+                  <th>Телефон</th>
+                  <th>Услуга</th>
+                  <th>Начало</th>
+                  <th>Конец</th>
+                </tr>
+              </thead>
+              <tbody id="apptsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="p-products">
+        <div class="card wide">
+          <h3>Товары (API одногруппника)</h3>
+          <h4 style="margin:0 0 0.75rem;font-size:1rem">Добавить товар</h4>
+          <label for="prodName">Название</label>
+          <input id="prodName" type="text" placeholder="Например, Клавиатура" />
+          <label for="prodDesc">Описание</label>
+          <textarea id="prodDesc" placeholder="Краткое описание"></textarea>
+          <div class="row2">
+            <div>
+              <label for="prodPrice">Цена, ₽</label>
+              <input id="prodPrice" type="number" min="0" step="1" placeholder="0" />
+            </div>
+            <div>
+              <label for="prodStock">На складе</label>
+              <input id="prodStock" type="number" min="0" step="1" placeholder="0" />
+            </div>
+          </div>
+          <label for="prodCategory">Категория</label>
+          <input id="prodCategory" type="text" placeholder="Например, Аксессуары" />
+          <div class="btn-row">
+            <button type="button" class="action" id="btnAddProduct">Отправить в магазин</button>
+          </div>
+          <p class="muted" id="prodAddMsg" style="display:none"></p>
+          <h4 style="margin:1.25rem 0 0.75rem;font-size:1rem">Каталог</h4>
+          <div class="btn-row">
+            <button type="button" class="action secondary" id="btnRefreshProducts">Обновить список</button>
+          </div>
+          <p class="muted" id="prodEmpty">Загрузка…</p>
+          <div class="table-wrap" id="prodWrap" style="display:none">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Название</th>
+                  <th>Цена, ₽</th>
+                  <th>На складе</th>
+                  <th>Категория</th>
+                </tr>
+              </thead>
+              <tbody id="prodBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "";
+    const CLASSMATE_PRODUCTS_URL = "https://cvb-0pd8.onrender.com/api/products";
+
+    function api(path) {
+      const b = (typeof API_BASE === "string" ? API_BASE : "").replace(/\/$/, "");
+      return b + path;
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement("div");
+      d.textContent = s == null ? "" : String(s);
+      return d.innerHTML;
+    }
+
+    function renderProductsTable(list) {
+      const tbody = document.getElementById("prodBody");
+      const wrap = document.getElementById("prodWrap");
+      const empty = document.getElementById("prodEmpty");
+      tbody.innerHTML = "";
+      if (!list || !list.length) {
+        wrap.style.display = "none";
+        empty.textContent = "Нет данных.";
+        return;
+      }
+      empty.textContent = "";
+      wrap.style.display = "block";
+      list.forEach((p) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(p.id) +
+          "</td><td>" +
+          escapeHtml(p.name) +
+          "</td><td>" +
+          escapeHtml(p.price) +
+          "</td><td>" +
+          escapeHtml(p.inStock) +
+          "</td><td>" +
+          escapeHtml(p.category) +
+          "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadProductsPanel() {
+      const empty = document.getElementById("prodEmpty");
+      empty.textContent = "Загрузка…";
+      try {
+        let r = await fetch(api("/api/classmate/products"));
+        let j = await r.json().catch(() => ({}));
+        let list = [];
+        if (r.ok && j.data && Array.isArray(j.data)) {
+          list = j.data;
+          empty.textContent = "";
+        } else if (r.status === 404) {
+          r = await fetch(CLASSMATE_PRODUCTS_URL);
+          if (!r.ok) {
+            empty.textContent = j.error || "Ошибка загрузки";
+            document.getElementById("prodWrap").style.display = "none";
+            return;
+          }
+          list = await r.json();
+          if (!Array.isArray(list)) list = [];
+          empty.textContent = "Прямой запрос к " + CLASSMATE_PRODUCTS_URL + " (прокси на сервере не найден — обновите деплой).";
+        } else {
+          empty.textContent = j.error || "Ошибка загрузки";
+          document.getElementById("prodWrap").style.display = "none";
+          return;
+        }
+        renderProductsTable(list);
+      } catch (e) {
+        empty.textContent = String(e.message || e);
+        document.getElementById("prodWrap").style.display = "none";
+      }
+    }
+
+    function renderAppointments(rows) {
+      const tbody = document.getElementById("apptsBody");
+      const wrap = document.getElementById("apptsWrap");
+      const empty = document.getElementById("apptsEmpty");
+      tbody.innerHTML = "";
+      if (!rows || !rows.length) {
+        wrap.style.display = "none";
+        empty.textContent = "Записей пока нет.";
+        return;
+      }
+      empty.textContent = "";
+      wrap.style.display = "block";
+      rows.forEach((a) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" +
+          escapeHtml(a.id) +
+          "</td><td>" +
+          escapeHtml(a.clientName) +
+          "</td><td>" +
+          escapeHtml(a.clientPhone) +
+          "</td><td>" +
+          escapeHtml(a.serviceId) +
+          "</td><td>" +
+          escapeHtml(a.start) +
+          "</td><td>" +
+          escapeHtml(a.end) +
+          "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadAppointments() {
+      document.getElementById("apptsEmpty").textContent = "Загрузка…";
+      document.getElementById("apptsWrap").style.display = "none";
+      try {
+        const r = await fetch(api("/api/appointments"));
+        const j = await r.json();
+        if (!r.ok) {
+          document.getElementById("apptsEmpty").textContent = j.error || "Ошибка";
+          return;
+        }
+        renderAppointments(j.data || []);
+      } catch (e) {
+        document.getElementById("apptsEmpty").textContent = String(e.message || e);
+      }
+    }
+
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        const id = btn.dataset.panel;
+        document.getElementById(id).classList.add("active");
+        if (id === "p-list") loadAppointments();
+        if (id === "p-products") loadProductsPanel();
+      });
+    });
+
+    const tomorrow = new Date(Date.now() + 86400000);
+    const d0 = new Date(tomorrow);
+    d0.setHours(10, 0, 0, 0);
+    const d1 = new Date(tomorrow);
+    d1.setHours(11, 0, 0, 0);
+    function toLocal(dt) {
+      const pad = (n) => String(n).padStart(2, "0");
+      return (
+        dt.getFullYear() +
+        "-" +
+        pad(dt.getMonth() + 1) +
+        "-" +
+        pad(dt.getDate()) +
+        "T" +
+        pad(dt.getHours()) +
+        ":" +
+        pad(dt.getMinutes())
+      );
+    }
+    document.getElementById("start").value = toLocal(d0);
+    document.getElementById("end").value = toLocal(d1);
+
+    document.getElementById("btnRefreshAppts").onclick = () => loadAppointments();
+    document.getElementById("btnRefreshProducts").onclick = () => loadProductsPanel();
+
+    document.getElementById("btnAddProduct").onclick = async () => {
+      const name = document.getElementById("prodName").value.trim();
+      const description = document.getElementById("prodDesc").value.trim();
+      const price = Number(document.getElementById("prodPrice").value);
+      const inStock = Number(document.getElementById("prodStock").value);
+      const category = document.getElementById("prodCategory").value.trim();
+      const el = document.getElementById("prodAddMsg");
+      el.style.display = "block";
+      if (!name || !description || !category || Number.isNaN(price) || Number.isNaN(inStock)) {
+        el.style.color = "#b91c1c";
+        el.textContent = "Заполните все поля; цена и остаток — числа.";
+        return;
+      }
+      const payload = { name, description, price, category, inStock };
+      try {
+        let r = await fetch(api("/api/classmate/products"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(payload)
+        });
+        let j = await r.json().catch(() => ({}));
+        if (r.status === 404) {
+          r = await fetch(CLASSMATE_PRODUCTS_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Accept: "application/json" },
+            body: JSON.stringify(payload)
+          });
+          j = await r.json().catch(() => ({}));
+        }
+        if (!r.ok) {
+          el.style.color = "#b91c1c";
+          el.textContent = (j && (j.error || (j.detail && String(j.detail)))) || "Ошибка";
+          return;
+        }
+        const inner = j.data != null ? j.data : j;
+        el.style.color = "#15803d";
+        el.textContent =
+          (inner && inner.message) ||
+          (inner && inner.productId != null ? "Создан товар id=" + inner.productId : "Готово");
+        loadProductsPanel();
+      } catch (e) {
+        el.style.color = "#b91c1c";
+        el.textContent = String(e.message || e);
+      }
+    };
+
+    document.getElementById("btnBooking").onclick = async () => {
+      const msg = document.getElementById("bookingMsg");
+      const pre = document.getElementById("bookingOut");
+      msg.style.display = "none";
+      pre.style.display = "none";
+      const startVal = document.getElementById("start").value;
+      const endVal = document.getElementById("end").value;
+      if (!startVal || !endVal) {
+        msg.className = "booking-msg err";
+        msg.textContent = "Укажите дату и время начала и конца.";
+        msg.style.display = "block";
+        return;
+      }
+      const body = {
+        clientName: document.getElementById("cName").value.trim(),
+        clientPhone: document.getElementById("cPhone").value.trim(),
+        serviceId: document.getElementById("svcId2").value,
+        start: new Date(startVal).toISOString(),
+        end: new Date(endVal).toISOString()
+      };
+      try {
+        const r = await fetch(api("/api/appointments"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify(body)
+        });
+        const text = await r.text();
+        let data;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          data = { raw: text };
+        }
+        pre.textContent = JSON.stringify({ http: r.status, data }, null, 2);
+        pre.style.display = "block";
+        if (!r.ok) {
+          msg.className = "booking-msg err";
+          msg.textContent = data.error || "Ошибка";
+          msg.style.display = "block";
+          return;
+        }
+        msg.className = "booking-msg";
+        msg.textContent = (data && data.message) || "Запись создана.";
+        msg.style.display = "block";
+      } catch (e) {
+        msg.className = "booking-msg err";
+        msg.textContent = String(e.message || e);
+        msg.style.display = "block";
+      }
+    };
+  </script>
+</body>
+</html>

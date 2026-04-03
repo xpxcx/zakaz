@@ -1,9 +1,13 @@
 import express from "express";
+import cors from "cors";
 import { readFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import swaggerUi from "swagger-ui-express";
 import { suggestSlots } from "./slotEngine.js";
+import { registerClassmateRoutes } from "./classmateApi.js";
+import { listAppointments, insertAppointment, getDbPath } from "./db.js";
+import { registerIntegrationRoutes } from "./integration.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const openApiSpec = JSON.parse(readFileSync(join(__dirname, "openapi.json"), "utf8"));
@@ -11,6 +15,7 @@ const openApiSpec = JSON.parse(readFileSync(join(__dirname, "openapi.json"), "ut
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
 /** В памяти: демо-данные для GET (услуги и записи) */
@@ -19,7 +24,14 @@ const services = [
   { id: "svc-2", title: "Консультация", defaultDurationMin: 30, price: 800 },
 ];
 
-const appointments = [];
+const getMiniCrmBaseUrl = () =>
+  (process.env.PUBLIC_BASE_URL || process.env.MINICRM_BASE_URL || `http://127.0.0.1:${PORT}`).replace(
+    /\/$/,
+    ""
+  );
+
+registerClassmateRoutes(app);
+registerIntegrationRoutes(app, { getMiniCrmBaseUrl });
 
 /**
  * GET — получение данных (требование задания)
@@ -34,7 +46,8 @@ app.get("/api/services", (req, res) => {
 });
 
 app.get("/api/appointments", (req, res) => {
-  res.json({ data: appointments, count: appointments.length });
+  const data = listAppointments();
+  res.json({ data, count: data.length });
 });
 
 /**
@@ -70,8 +83,8 @@ app.post("/api/appointments", (req, res) => {
     status: "confirmed",
     createdAt: new Date().toISOString(),
   };
-  appointments.push(row);
-  res.status(201).json({ data: row, message: "Запись создана (демо, в памяти)" });
+  insertAppointment(row);
+  res.status(201).json({ data: row, message: "Запись сохранена в SQLite" });
 });
 
 app.get("/openapi.json", (req, res) => {
@@ -87,12 +100,22 @@ app.use(
   })
 );
 
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found", path: req.path });
+app.use(express.static(join(__dirname, "public")));
+
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return res.status(404).json({ error: "Not found", path: req.path });
+  }
+  next();
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {
-  console.log(`MiniCRM Booking API: http://localhost:${PORT}`);
+  console.log(`MiniCRM Booking API: http://localhost:${PORT} (при запуске локально)`);
+  console.log(`MiniCRM Booking API: https://cvb-crm.onrender.com`);
   console.log(`  GET  /api/health`);
   console.log(`  GET  /api/services`);
   console.log(`  GET  /api/appointments`);
@@ -100,4 +123,5 @@ app.listen(PORT, () => {
   console.log(`  POST /api/appointments`);
   console.log(`  GET  /openapi.json`);
   console.log(`  GET  /api-docs — Swagger UI`);
+  console.log(`  GET  /api/integration/status`);
 });
